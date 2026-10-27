@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PromptCraft AI — Free AI Prompt Generator</title>
+  <title>PromptCraft AI — Free AI Prompt & Photo Generator</title>
   <style>
     :root {
       --bg: #0c0a15;
@@ -17,7 +17,7 @@
       --border: #352f5b;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
     .container { max-width: 800px; width: 100%; display: flex; flex-direction: column; gap: 20px; }
     header { background: linear-gradient(135deg, var(--surface), #261b47); border: 1px solid var(--border); border-radius: 16px; padding: 24px; text-align: center; }
     header h1 { font-size: 28px; color: #fff; display: flex; align-items: center; justify-content: center; gap: 10px; }
@@ -32,11 +32,17 @@
     .quick-chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip { background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.3); color: var(--neon-cyan); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
     .chip:hover { background: rgba(0, 240, 255, 0.2); }
-    .btn-generate { background: var(--primary); color: #fff; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-generate { flex: 1; background: var(--primary); color: #fff; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; min-width: 180px; }
     .btn-generate:hover { background: var(--primary-hover); }
-    .output-box { background: #100d1e; border: 1px solid var(--border); border-radius: 12px; padding: 16px; font-family: monospace; font-size: 14px; line-height: 1.6; min-height: 120px; white-space: pre-wrap; }
+    .btn-photo { flex: 1; background: rgba(0, 240, 255, 0.15); color: var(--neon-cyan); border: 1.5px solid var(--neon-cyan); padding: 14px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; min-width: 180px; }
+    .btn-photo:hover { background: rgba(0, 240, 255, 0.25); }
+    .output-box { background: #100d1e; border: 1px solid var(--border); border-radius: 12px; padding: 16px; font-family: monospace; font-size: 14px; line-height: 1.6; min-height: 100px; white-space: pre-wrap; }
     .btn-copy { background: var(--neon-cyan); color: #000; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; align-self: flex-start; }
     .btn-copy:hover { opacity: 0.9; }
+    .photo-preview { display: none; margin-top: 10px; text-align: center; }
+    .photo-preview img { width: 100%; max-height: 480px; object-fit: cover; border-radius: 12px; border: 1.5px solid var(--neon-cyan); }
+    .photo-status { font-size: 13px; color: var(--neon-cyan); margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -44,7 +50,7 @@
 <div class="container">
   <header>
     <h1>✨ PromptCraft AI</h1>
-    <p>Free AI Prompt Generator for YouTube, Midjourney, Sora & Thumbnails</p>
+    <p>AI Prompt & Photo Generator for YouTube, Midjourney, Flux & Sora</p>
   </header>
 
   <div class="card">
@@ -57,10 +63,10 @@
     </div>
 
     <div class="section-title">2. Apna Idea Likhein</div>
-    <textarea id="ideaInput" rows="3" placeholder="e.g. An old village during heavy rain, a farmer standing near a mud house..."></textarea>
+    <textarea id="ideaInput" rows="3" placeholder="e.g. An old village during heavy rain, a farmer standing near a mud house...">An old village during heavy rain, a farmer standing near a mud house</textarea>
     
     <div class="quick-chips">
-      <span class="chip" onclick="applyIdea('An old village during heavy rain, a farmer standing near mud house')">🌧️ Monsoon Village</span>
+      <span class="chip" onclick="applyIdea('An old village during heavy rain, a farmer standing near a mud house')">🌧️ Monsoon Village</span>
       <span class="chip" onclick="applyIdea('Cyberpunk night street food ramen stall in rain')">🍜 Cyberpunk Ramen</span>
       <span class="chip" onclick="applyIdea('Secret ancient library discovered under Antarctic ice')">❄️ Antarctic Mystery</span>
     </div>
@@ -73,12 +79,22 @@
       <button class="btn-select" onclick="setStyle('Anime Studio', this)">Anime / Ghibli</button>
     </div>
 
-    <button class="btn-generate" onclick="generatePrompt()">⚡ Instant Generate Prompt (0s)</button>
+    <div class="action-row">
+      <button class="btn-generate" onclick="generatePrompt()">⚡ Instant Prompt (0s)</button>
+      <button class="btn-photo" onclick="generateRealAiPhoto()">🖼️ Generate Real AI Photo (Free Flux)</button>
+    </div>
+  </div>
+
+  <!-- Real AI Photo Preview -->
+  <div id="photoCard" class="card photo-preview">
+    <div class="section-title">Real AI Photo Preview (Flux Free API)</div>
+    <img id="photoImg" src="" alt="AI Generated Photo" />
+    <div id="photoStatus" class="photo-status">Rendering photo...</div>
   </div>
 
   <div class="card">
     <div class="section-title">Generated Prompt</div>
-    <div id="output" class="output-box">Pehle upar se Generate button dabayein...</div>
+    <div id="output" class="output-box"></div>
     <button class="btn-copy" onclick="copyPrompt()">📋 Copy Prompt</button>
   </div>
 </div>
@@ -91,12 +107,14 @@
     currentCategory = cat;
     document.querySelectorAll('.category-grid .btn-select').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    generatePrompt();
   }
 
   function setStyle(st, btn) {
     currentStyle = st;
     document.querySelectorAll('.style-grid .btn-select').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    generatePrompt();
   }
 
   function applyIdea(text) {
@@ -122,12 +140,35 @@
     document.getElementById('output').textContent = result;
   }
 
+  function generateRealAiPhoto() {
+    const idea = document.getElementById('ideaInput').value.trim() || "An old village during heavy rain, a farmer standing near a mud house";
+    const photoCard = document.getElementById('photoCard');
+    const photoImg = document.getElementById('photoImg');
+    const photoStatus = document.getElementById('photoStatus');
+
+    photoCard.style.display = 'block';
+    photoStatus.textContent = '⏳ Rendering real AI photo with Flux API... Please wait a few seconds';
+    
+    const seed = Math.floor(Math.random() * 1000000);
+    const cleanPrompt = encodeURIComponent(`photorealistic 8k masterpiece of ${idea}, ${currentStyle}, dramatic cinematic lighting, photorealistic details`);
+    const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1024&height=576&model=flux&nologo=true&seed=${seed}`;
+
+    photoImg.src = imageUrl;
+    photoImg.onload = () => {
+      photoStatus.textContent = '✨ AI Photo generated successfully! (Right click to save image)';
+    };
+    photoImg.onerror = () => {
+      photoStatus.textContent = 'Network error loading photo. Please try again.';
+    };
+
+    generatePrompt();
+  }
+
   function copyPrompt() {
     const text = document.getElementById('output').textContent;
     navigator.clipboard.writeText(text).then(() => alert("Prompt copied to clipboard!"));
   }
 
-  // Load default prompt on start
   window.onload = generatePrompt;
 </script>
 
