@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromptCraft AI — Free AI Prompt Generator</title>
+  <style>
+    :root {
+      --bg: #0c0a15;
+      --surface: #161327;
+      --surface-hover: #221e3d;
+      --primary: #9353d3;
+      --primary-hover: #a86de4;
+      --neon-cyan: #00f0ff;
+      --text: #f1f0f7;
+      --text-muted: #a5a0ca;
+      --border: #352f5b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; }
+    .container { max-width: 800px; width: 100%; display: flex; flex-direction: column; gap: 20px; }
+    header { background: linear-gradient(135deg, var(--surface), #261b47); border: 1px solid var(--border); border-radius: 16px; padding: 24px; text-align: center; }
+    header h1 { font-size: 28px; color: #fff; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    header p { color: var(--text-muted); margin-top: 6px; font-size: 14px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .section-title { font-size: 12px; font-weight: 700; color: var(--neon-cyan); letter-spacing: 1px; text-transform: uppercase; }
+    .category-grid, .style-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+    .btn-select { background: var(--surface-hover); border: 1px solid var(--border); color: var(--text-muted); padding: 10px; border-radius: 10px; font-size: 13px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+    .btn-select.active { background: rgba(147, 83, 211, 0.25); border-color: var(--primary); color: #fff; }
+    textarea, input { width: 100%; background: #120e24; border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: #fff; font-size: 14px; outline: none; }
+    textarea:focus, input:focus { border-color: var(--primary); }
+    .quick-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.3); color: var(--neon-cyan); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+    .chip:hover { background: rgba(0, 240, 255, 0.2); }
+    .btn-generate { background: var(--primary); color: #fff; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-generate:hover { background: var(--primary-hover); }
+    .output-box { background: #100d1e; border: 1px solid var(--border); border-radius: 12px; padding: 16px; font-family: monospace; font-size: 14px; line-height: 1.6; min-height: 120px; white-space: pre-wrap; }
+    .btn-copy { background: var(--neon-cyan); color: #000; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; align-self: flex-start; }
+    .btn-copy:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>✨ PromptCraft AI</h1>
+    <p>Free AI Prompt Generator for YouTube, Midjourney, Sora & Thumbnails</p>
+  </header>
+
+  <div class="card">
+    <div class="section-title">1. Format Select Karein</div>
+    <div class="category-grid">
+      <button class="btn-select active" onclick="setCategory('image', this)">🖼️ AI Image</button>
+      <button class="btn-select" onclick="setCategory('video', this)">🎥 AI Video</button>
+      <button class="btn-select" onclick="setCategory('story', this)">📖 YouTube Story</button>
+      <button class="btn-select" onclick="setCategory('thumb', this)">🎯 Viral Thumbnail</button>
+    </div>
+
+    <div class="section-title">2. Apna Idea Likhein</div>
+    <textarea id="ideaInput" rows="3" placeholder="e.g. An old village during heavy rain, a farmer standing near a mud house..."></textarea>
+    
+    <div class="quick-chips">
+      <span class="chip" onclick="applyIdea('An old village during heavy rain, a farmer standing near mud house')">🌧️ Monsoon Village</span>
+      <span class="chip" onclick="applyIdea('Cyberpunk night street food ramen stall in rain')">🍜 Cyberpunk Ramen</span>
+      <span class="chip" onclick="applyIdea('Secret ancient library discovered under Antarctic ice')">❄️ Antarctic Mystery</span>
+    </div>
+
+    <div class="section-title">3. Visual Style</div>
+    <div class="style-grid">
+      <button class="btn-select active" onclick="setStyle('Cinematic 3D', this)">Cinematic 3D</button>
+      <button class="btn-select" onclick="setStyle('Hyper-Realistic', this)">Hyper-Realistic 8K</button>
+      <button class="btn-select" onclick="setStyle('Desi Heritage', this)">Desi Heritage</button>
+      <button class="btn-select" onclick="setStyle('Anime Studio', this)">Anime / Ghibli</button>
+    </div>
+
+    <button class="btn-generate" onclick="generatePrompt()">⚡ Instant Generate Prompt (0s)</button>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Generated Prompt</div>
+    <div id="output" class="output-box">Pehle upar se Generate button dabayein...</div>
+    <button class="btn-copy" onclick="copyPrompt()">📋 Copy Prompt</button>
+  </div>
+</div>
+
+<script>
+  let currentCategory = 'image';
+  let currentStyle = 'Cinematic 3D';
+
+  function setCategory(cat, btn) {
+    currentCategory = cat;
+    document.querySelectorAll('.category-grid .btn-select').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function setStyle(st, btn) {
+    currentStyle = st;
+    document.querySelectorAll('.style-grid .btn-select').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function applyIdea(text) {
+    document.getElementById('ideaInput').value = text;
+    generatePrompt();
+  }
+
+  function generatePrompt() {
+    const idea = document.getElementById('ideaInput').value.trim() || "An old village during heavy rain, a farmer standing near a mud house";
+    document.getElementById('ideaInput').value = idea;
+
+    let result = "";
+    if (currentCategory === 'image') {
+      result = `Masterpiece cinematic photograph of ${idea}. Style: ${currentStyle}. Masterful composition, dramatic golden hour rim lighting, atmospheric haze, shot on Hasselblad H6D-100c, 85mm f/1.4 lens, pore-level texture, volumetric lighting, ultra-high dynamic range, 8k resolution, --ar 16:9 --v 6.1 --style raw`;
+    } else if (currentCategory === 'video') {
+      result = `Cinematic 4K Video: A continuous flowing shot depicting ${idea}. Camera starts with establishing wide-angle, then smoothly glides in low-angle tracking motion. Style: ${currentStyle}. Dynamic rain ripples, photorealistic motion blur, 24fps cinematic film cadence.`;
+    } else if (currentCategory === 'story') {
+      result = `[VIRAL YOUTUBE HOOK (0:00 - 0:05)]:\n"Scientists said ${idea} was impossible... until satellite radar uncovered this."\n\n[SCENE 1: THE DISCOVERY]:\nCinematic drone glide revealing the location with intense atmospheric soundscape. Style: ${currentStyle}.\n\n[THUMBNAIL PROMPT]:\nHigh contrast 16:9 thumbnail: Dramatic close-up of ${idea}, shocked face in corner, neon yellow bold text.`;
+    } else {
+      result = `High-CTR YouTube Thumbnail: Extreme high-energy close up of ${idea}. Intense neon directional rim light separating subject from background, bold shocked expression, 3D depth pop, designed for mobile screen clicks, --ar 16:9`;
+    }
+
+    document.getElementById('output').textContent = result;
+  }
+
+  function copyPrompt() {
+    const text = document.getElementById('output').textContent;
+    navigator.clipboard.writeText(text).then(() => alert("Prompt copied to clipboard!"));
+  }
+
+  // Load default prompt on start
+  window.onload = generatePrompt;
+</script>
+
+</body>
+</html>
